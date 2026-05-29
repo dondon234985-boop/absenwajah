@@ -57,7 +57,8 @@
 </div>
 
 <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbzaDkGzLcs_HzcaqtaKlMuVevysQ-tnQKxzutyMSStTNKePvrxcVOSxkdpAeWNFYRDC/exec"; // GANTI DENGAN URL GAS ANDA
+  // URL WEB APP GAS ANDA
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzaDkGzLcs_HzcaqtaKlMuVevysQ-tnQKxzutyMSStTNKePvrxcVOSxkdpAeWNFYRDC/exec"; 
   
   let labeledDescriptors = [];
   const video = document.getElementById('video');
@@ -92,7 +93,6 @@
   }
 
   async function processAbsence(tipe) {
-    // Kunci kedua tombol agar tidak double click
     btnMasuk.disabled = true;
     btnPulang.disabled = true;
     updateStatus(`PROSES ABSEN ${tipe}...`, "warning");
@@ -114,11 +114,14 @@
       } else {
         navigator.geolocation.getCurrentPosition(async pos => {
           const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
-          await fetch(GAS_URL, {
+          const res = await fetch(GAS_URL, {
             method: "POST",
             body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc })
           });
-          alert(`BERHASIL ABSEN ${tipe}!\nNama: ${bestMatch.label}`);
+          
+          const result = await res.json();
+          // Alert sekarang menampilkan pesan dari server yang berisi info durasi
+          alert(`SISTEM: ${result.message}\nNama: ${bestMatch.label}`);
           resetAbsenUI();
         }, (err) => {
           alert("Gagal ambil lokasi GPS.");
@@ -131,14 +134,13 @@
     }
   }
 
+  // --- Fungsi Lainnya ---
   async function register() {
     const nama = document.getElementById('regNama').value;
     const nik = document.getElementById('regNIK').value;
     if(!nama || !nik) return alert("Isi Nama & NIK!");
-    
     btnReg.disabled = true;
     updateStatus("MEREKAM WAJAH...", "warning");
-
     try {
       const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
       if(detection) {
@@ -174,4 +176,3 @@
 </script>
 </body>
 </html>
-
