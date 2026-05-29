@@ -152,24 +152,35 @@
 
   // --- Fungsi AI & Kamera (Tetap Sama) ---
   async function init() {
-    //const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-    const MODEL_URL = 'https://dondon234985-boop.github.io/absenwajah/models';
+    // Gunakan URL yang lebih stabil (CDN) atau repo sendiri
+    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
     
     try {
+      updateStatus("MENGUNDUH OTAK AI...", "warning");
+
+      // Hapus ssdMobilenetv1 karena sangat berat (5MB+)
+      // Fokus pada 3 model utama yang ringan
       await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL), // Ringan (0.2 MB)
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Menengah
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL) // Menengah
       ]);
+
+      // Aktifkan kamera sesegera mungkin tanpa menunggu database wajah
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       video.srcObject = stream;
+
+      updateStatus("MENYINKRONKAN DATA...", "info");
       const response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getFaces" }) });
       const faces = await response.json();
       labeledDescriptors = faces.map(d => new faceapi.LabeledFaceDescriptors(d.name, [new Float32Array(d.descriptor)]));
+      
       updateStatus("SISTEM SIAP", "success");
-      btnMasuk.disabled = false; btnPulang.disabled = false;
-    } catch (err) { updateStatus("ERROR AI", "danger"); }
+      btnMasuk.disabled = false;
+      btnPulang.disabled = false;
+    } catch (err) {
+      updateStatus("GAGAL LOAD AI", "danger");
+    }
   }
 
  async function processAbsence(tipe) {
