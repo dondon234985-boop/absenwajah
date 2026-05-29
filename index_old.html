@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Absensi Wajah - Masuk/Pulang</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    body { background: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .main-container { max-width: 500px; margin: auto; padding: 20px; }
+    #video-container { position: relative; width: 100%; border-radius: 20px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); line-height: 0; }
+    video { width: 100%; height: auto; display: block; }
+    .card-reg { border: none; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .badge-status { font-size: 0.9rem; padding: 8px 15px; border-radius: 50px; }
+    .btn-absen { padding: 15px; font-weight: bold; font-size: 1.1rem; border-radius: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="main-container">
+  <div class="text-center mb-4">
+    <h3 class="fw-bold text-primary">Presensi Digital</h3>
+    <p class="text-muted small">Pilih Tipe Absensi di Bawah Ini</p>
+  </div>
+
+  <div id="video-container" class="mb-3">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
+
+  <div class="text-center mb-4">
+    <span id="status" class="badge-status badge bg-secondary text-white">Memuat AI...</span>
+  </div>
+
+  <!-- Dua Tombol Absen: Masuk dan Pulang -->
+  <div class="row g-2 mb-5">
+    <div class="col-6">
+      <button id="btnMasuk" class="btn btn-success btn-absen w-100 shadow-sm" onclick="processAbsence('MASUK')" disabled>
+        ABSEN MASUK
+      </button>
+    </div>
+    <div class="col-6">
+      <button id="btnPulang" class="btn btn-danger btn-absen w-100 shadow-sm" onclick="processAbsence('PULANG')" disabled>
+        ABSEN PULANG
+      </button>
+    </div>
+  </div>
+
+  <div class="card card-reg p-4">
+    <h6 class="fw-bold mb-3 text-center">Registrasi Karyawan Baru</h6>
+    <div class="mb-2"><input type="text" id="regNama" class="form-control" placeholder="Nama Lengkap"></div>
+    <div class="mb-3"><input type="text" id="regNIK" class="form-control" placeholder="NIK"></div>
+    <button id="btnReg" class="btn btn-outline-primary fw-bold w-100" onclick="register()">DAFTARKAN WAJAH</button>
+  </div>
+
+  <p class="text-center mt-4 text-muted" style="font-size: 10px;">Powered by GAS-WebMaster</p>
+</div>
+
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzaDkGzLcs_HzcaqtaKlMuVevysQ-tnQKxzutyMSStTNKePvrxcVOSxkdpAeWNFYRDC/exec"; // GANTI DENGAN URL GAS ANDA
+  
+  let labeledDescriptors = [];
+  const video = document.getElementById('video');
+  const status = document.getElementById('status');
+  const btnMasuk = document.getElementById('btnMasuk');
+  const btnPulang = document.getElementById('btnPulang');
+  const btnReg = document.getElementById('btnReg');
+
+  async function init() {
+    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+    try {
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
+      ]);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+
+      const response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getFaces" }) });
+      const faces = await response.json();
+      labeledDescriptors = faces.map(d => new faceapi.LabeledFaceDescriptors(d.name, [new Float32Array(d.descriptor)]));
+      
+      updateStatus("SISTEM SIAP", "success");
+      btnMasuk.disabled = false;
+      btnPulang.disabled = false;
+    } catch (err) {
+      updateStatus("GAGAL MEMUAT SISTEM", "danger");
+    }
+  }
+
+  async function processAbsence(tipe) {
+    // Kunci kedua tombol agar tidak double click
+    btnMasuk.disabled = true;
+    btnPulang.disabled = true;
+    updateStatus(`PROSES ABSEN ${tipe}...`, "warning");
+
+    try {
+      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      if (!detection) {
+        alert("Wajah tidak terdeteksi!");
+        resetAbsenUI();
+        return;
+      }
+
+      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+      const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+      
+      if (bestMatch.label === 'unknown') {
+        alert("Wajah tidak dikenali!");
+        resetAbsenUI();
+      } else {
+        navigator.geolocation.getCurrentPosition(async pos => {
+          const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
+          await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc })
+          });
+          alert(`BERHASIL ABSEN ${tipe}!\nNama: ${bestMatch.label}`);
+          resetAbsenUI();
+        }, (err) => {
+          alert("Gagal ambil lokasi GPS.");
+          resetAbsenUI();
+        });
+      }
+    } catch (e) {
+      alert("Terjadi kesalahan teknis.");
+      resetAbsenUI();
+    }
+  }
+
+  async function register() {
+    const nama = document.getElementById('regNama').value;
+    const nik = document.getElementById('regNIK').value;
+    if(!nama || !nik) return alert("Isi Nama & NIK!");
+    
+    btnReg.disabled = true;
+    updateStatus("MEREKAM WAJAH...", "warning");
+
+    try {
+      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      if(detection) {
+        await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(detection.descriptor) })
+        });
+        alert("Registrasi Berhasil!");
+        location.reload();
+      } else {
+        alert("Wajah tidak terdeteksi!");
+        btnReg.disabled = false;
+        updateStatus("SISTEM SIAP", "success");
+      }
+    } catch (e) {
+      alert("Gagal menyimpan data.");
+      btnReg.disabled = false;
+    }
+  }
+
+  function resetAbsenUI() {
+    btnMasuk.disabled = false;
+    btnPulang.disabled = false;
+    updateStatus("SISTEM SIAP", "success");
+  }
+
+  function updateStatus(text, type) {
+    status.innerText = text;
+    status.className = `badge-status badge bg-${type} text-white`;
+  }
+
+  window.onload = init;
+</script>
+</body>
+</html>
