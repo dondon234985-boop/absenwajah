@@ -82,7 +82,7 @@
 </div>
 
 <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbwEakvP4OLKc_99Ni0DcdQyKI9KmoDDB3D6URnxYpkBBh5764IznUHrGvoVCT3oaXfv/exec"; 
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbz5y-gY9euaVkfHgMcnQORbX6KjNlfIIkhcBxGOKKXpC4WxO-_XcYQLGb-x9khR5V-g/exec"; 
   
   let labeledDescriptors = [];
   const video = document.getElementById('video');
@@ -110,24 +110,42 @@
   // Ambil Data Log dari Sheets
   async function loadLogs() {
     const tbody = document.getElementById('logTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>';
+    
     try {
-      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getLogs" }) });
+      console.log("Mencoba mengambil log dari GAS...");
+      const res = await fetch(GAS_URL, { 
+        method: "POST", 
+        body: JSON.stringify({ action: "getLogs" }) 
+      });
+      
       const logs = await res.json();
+      console.log("Data diterima:", logs);
+
+      if (!Array.isArray(logs) || logs.length <= 1) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat absen hari ini</td></tr>';
+        return;
+      }
+
       let html = "";
-      // Mulai dari index 1 (lewatkan header)
+      // i=1 karena index 0 adalah header
       for(let i=1; i < logs.length; i++) {
+        // logs[i][0] = Nama, [1] = Tipe, [3] = Jam, [5] = Durasi, [4] = Lokasi
+        const tipeBadge = logs[i][1] === 'MASUK' ? 'bg-success' : 'bg-danger';
+        const durasi = logs[i][5] !== "" ? logs[i][5] + ' m' : '-';
+        
         html += `<tr>
-          <td>${logs[i][0]}</td>
-          <td><span class="badge ${logs[i][1]=='MASUK'?'bg-success':'bg-danger'}">${logs[i][1]}</span></td>
+          <td class="fw-bold">${logs[i][0]}</td>
+          <td><span class="badge ${tipeBadge}">${logs[i][1]}</span></td>
           <td>${logs[i][3]}</td>
-          <td>${logs[i][5] || '-'} m</td>
-          <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank">Lihat</a></td>
+          <td>${durasi}</td>
+          <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank" class="btn btn-sm btn-link p-0">Map</a></td>
         </tr>`;
       }
-      tbody.innerHTML = html || '<tr><td colspan="5" class="text-center">Belum ada data</td></tr>';
+      tbody.innerHTML = html;
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center">Gagal memuat data</td></tr>';
+      console.error("Kesalahan loadLogs:", e);
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data. Periksa koneksi atau URL GAS.</td></tr>';
     }
   }
 
