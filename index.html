@@ -3,29 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Absensi Digital - Full Version</title>
+  <title>Sistem Absensi Cepat - Tiny AI</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Load library face-api.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <style>
     body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-    .main-container { max-width: 600px; margin: auto; padding: 15px; }
+    .main-container { max-width: 500px; margin: auto; padding: 15px; }
     #video-container { position: relative; width: 100%; border-radius: 20px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); line-height: 0; }
     video { width: 100%; height: auto; display: block; }
     .badge-status { font-size: 0.8rem; padding: 6px 12px; border-radius: 50px; }
-    .btn-custom { padding: 12px; font-weight: bold; border-radius: 12px; }
+    .btn-custom { padding: 12px; font-weight: bold; border-radius: 12px; transition: 0.3s; }
     
+    /* Menu Navigasi */
     .nav-pills .nav-link { border-radius: 10px; font-weight: bold; font-size: 0.85rem; color: #666; background: #fff; margin: 0 2px; border: 1px solid #ddd; }
     .nav-pills .nav-link.active { background-color: #0d6efd; color: white; border-color: #0d6efd; }
     
     .page-section { display: none; }
     .active-page { display: block; }
-    .table-responsive { font-size: 0.8rem; border-radius: 10px; }
+    .table-responsive { font-size: 0.75rem; border-radius: 10px; }
   </style>
 </head>
 <body>
 
 <div class="main-container">
-  <!-- Navigasi Menu -->
+  <!-- Menu Navigasi -->
   <ul class="nav nav-pills nav-justified mb-3 p-1" id="menu">
     <li class="nav-item"><a class="nav-link active" href="#" onclick="showPage('absen-page', this)">Absen</a></li>
     <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('riwayat-page', this)">Riwayat</a></li>
@@ -38,51 +40,56 @@
       <video id="video" autoplay muted playsinline></video>
     </div>
     <div class="text-center mb-4">
-      <span id="status" class="badge-status badge bg-secondary text-white">Memuat AI...</span>
+      <span id="status" class="badge-status badge bg-secondary text-white">Inisialisasi AI...</span>
     </div>
   </div>
 
   <!-- HALAMAN 1: ABSEN -->
   <div id="absen-page" class="page-section active-page">
     <div class="row g-2">
-      <div class="col-6"><button id="btnMasuk" class="btn btn-success btn-custom w-100" onclick="processAbsence('MASUK')" disabled>MASUK</button></div>
-      <div class="col-6"><button id="btnPulang" class="btn btn-danger btn-custom w-100" onclick="processAbsence('PULANG')" disabled>PULANG</button></div>
+      <div class="col-6">
+        <button id="btnMasuk" class="btn btn-success btn-custom w-100" onclick="processAbsence('MASUK')" disabled>MASUK</button>
+      </div>
+      <div class="col-6">
+        <button id="btnPulang" class="btn btn-danger btn-custom w-100" onclick="processAbsence('PULANG')" disabled>PULANG</button>
+      </div>
     </div>
   </div>
 
-  <!-- HALAMAN 2: RIWAYAT (TABEL) -->
+  <!-- HALAMAN 2: RIWAYAT -->
   <div id="riwayat-page" class="page-section">
     <div class="card border-0 shadow-sm p-2 rounded-4">
-      <h6 class="fw-bold mb-2 text-center">20 Data Terakhir</h6>
+      <h6 class="fw-bold mb-2 text-center text-primary">20 Riwayat Terakhir</h6>
       <div class="table-responsive">
         <table class="table table-sm table-striped">
           <thead class="table-dark">
-            <tr><th>Nama</th><th>Tipe</th><th>Jam</th><th>Durasi</th><th>Map</th></tr>
+            <tr><th>Nama</th><th>Tipe</th><th>Waktu</th><th>Min</th><th>Map</th></tr>
           </thead>
           <tbody id="logTableBody">
-            <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
+            <tr><td colspan="5" class="text-center">Memuat riwayat...</td></tr>
           </tbody>
         </table>
       </div>
-      <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadLogs()">Segarkan Data</button>
+      <button class="btn btn-sm btn-outline-primary mt-2 w-100" onclick="loadLogs()">Segarkan Laporan</button>
     </div>
   </div>
 
   <!-- HALAMAN 3: DAFTAR -->
   <div id="daftar-page" class="page-section">
     <div class="card border-0 shadow-sm p-4 rounded-4">
-      <h6 class="fw-bold mb-3">Registrasi Karyawan</h6>
+      <h6 class="fw-bold mb-3">Registrasi Karyawan Baru</h6>
       <input type="text" id="regNama" class="form-control mb-2" placeholder="Nama Lengkap">
       <input type="text" id="regNIK" class="form-control mb-3" placeholder="NIK">
-      <button id="btnReg" class="btn btn-primary btn-custom w-100" onclick="register()">DAFTAR WAJAH</button>
+      <button id="btnReg" class="btn btn-primary btn-custom w-100" onclick="register()">SIMPAN WAJAH</button>
     </div>
   </div>
 
-  <p class="text-center mt-5 text-muted" style="font-size: 10px;">GAS-WebMaster System v3.0</p>
+  <p class="text-center mt-5 text-muted" style="font-size: 10px;">GAS-WebMaster System v4.0 (Optimized)</p>
 </div>
 
 <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbx9QOEgQb823J6BPqVfsQJYcWcwXKq-44Z1zjZPop-RBdcwUYD0hJ-LNOEv40F6mgCB/exec"; 
+  // PENTING: GANTI DENGAN URL WEB APP GAS ANDA
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzaDkGzLcs_HzcaqtaKlMuVevysQ-tnQKxzutyMSStTNKePvrxcVOSxkdpAeWNFYRDC/exec"; 
   
   let labeledDescriptors = [];
   const video = document.getElementById('video');
@@ -91,14 +98,13 @@
   const btnPulang = document.getElementById('btnPulang');
   const btnReg = document.getElementById('btnReg');
 
-  // Navigasi Halaman
+  // Navigasi Antar Halaman
   function showPage(pageId, element) {
     document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active-page'));
     document.getElementById(pageId).classList.add('active-page');
     document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
     element.classList.add('active');
 
-    // Jika buka Riwayat, sembunyikan kamera agar tabel luas
     if(pageId === 'riwayat-page') {
       document.getElementById('cam-section').style.display = 'none';
       loadLogs();
@@ -107,70 +113,21 @@
     }
   }
 
-  // Ambil Data Log dari Sheets
-  async function loadLogs() {
-    const tbody = document.getElementById('logTableBody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Memuat data...</td></tr>';
-    
-    try {
-      console.log("Mencoba mengambil log dari GAS...");
-      const res = await fetch(GAS_URL, { 
-        method: "POST", 
-        body: JSON.stringify({ action: "getLogs" }) 
-      });
-      
-      const logs = await res.json();
-      console.log("Data diterima:", logs);
-
-      if (!Array.isArray(logs) || logs.length <= 1) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Belum ada riwayat absen hari ini</td></tr>';
-        return;
-      }
-
-      let html = "";
-      // i=1 karena index 0 adalah header
-      for(let i=1; i < logs.length; i++) {
-        // logs[i][0] = Nama, [1] = Tipe, [3] = Jam, [5] = Durasi, [4] = Lokasi
-        const tipeBadge = logs[i][1] === 'MASUK' ? 'bg-success' : 'bg-danger';
-        const durasi = logs[i][5] !== "" ? logs[i][5] + ' m' : '-';
-        
-       // ... di dalam loop for fungsi loadLogs() ...
-        html += `<tr>
-          <td class="fw-bold">${logs[i][0]}</td>
-          <td><span class="badge ${tipeBadge}">${logs[i][1]}</span></td>
-          <td>${logs[i][3]}</td> <!-- Ini akan otomatis menampilkan DD-MM-YYYY HH:mm:ss -->
-          <td>${durasi}</td>
-          <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank" class="btn btn-sm btn-link p-0">Map</a></td>
-        </tr>`;
-      }
-      tbody.innerHTML = html;
-    } catch (e) {
-      console.error("Kesalahan loadLogs:", e);
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data. Periksa koneksi atau URL GAS.</td></tr>';
-    }
-  }
-
-  // --- Fungsi AI & Kamera (Tetap Sama) ---
+  // Inisialisasi AI (Optimasi Tiny Detector)
   async function init() {
-    // Gunakan URL yang lebih stabil (CDN) atau repo sendiri
-    //const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-    const MODEL_URL = 'https://dondon234985-boop.github.io/absenwajah/models';
+    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
     try {
-      updateStatus("MENGUNDUH OTAK AI...", "warning");
-
-      // Hapus ssdMobilenetv1 karena sangat berat (5MB+)
-      // Fokus pada 3 model utama yang ringan
+      updateStatus("MEMUAT MODEL...", "warning");
       await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL), // Ringan (0.2 MB)
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL), // Menengah
-        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL) // Menengah
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
       ]);
 
-      // Aktifkan kamera sesegera mungkin tanpa menunggu database wajah
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       video.srcObject = stream;
 
-      updateStatus("MENYINKRONKAN DATA...", "info");
+      updateStatus("SINKRON DATA...", "info");
       const response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getFaces" }) });
       const faces = await response.json();
       labeledDescriptors = faces.map(d => new faceapi.LabeledFaceDescriptors(d.name, [new Float32Array(d.descriptor)]));
@@ -179,94 +136,123 @@
       btnMasuk.disabled = false;
       btnPulang.disabled = false;
     } catch (err) {
-      updateStatus("GAGAL LOAD AI", "danger");
+      updateStatus("ERROR SISTEM", "danger");
+      console.error(err);
     }
   }
 
- async function processAbsence(tipe) {
-    // Kunci tombol agar tidak double klik
+  // Fungsi Absensi (Optimasi Kecepatan)
+  async function processAbsence(tipe) {
     btnMasuk.disabled = true;
     btnPulang.disabled = true;
-    updateStatus(`SEDANG PROSES ${tipe}...`, "warning");
+    updateStatus(`SCANNING ${tipe}...`, "warning");
 
     try {
-      // 1. Deteksi Wajah
-      //const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      
-      const detection = await faceapi.detectSingleFace(
-        video, 
-        new faceapi.TinyFaceDetectorOptions() // Tambahkan opsi ini agar sangat cepat
-      ).withFaceLandmarks().withFaceDescriptor();
-
+      // Menggunakan TinyFaceDetectorOptions agar proses scanning instan
+      const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
       
       if (!detection) {
-        alert("Wajah tidak terdeteksi! Pastikan wajah terlihat jelas di depan kamera.");
-        resetAbsenUI();
+        alert("Wajah tidak terdeteksi! Pastikan cahaya cukup dan wajah terlihat jelas.");
+        resetUI();
         return;
       }
 
-      // 2. Pencocokan Wajah
       const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
       
       if (bestMatch.label === 'unknown') {
-        alert("Wajah tidak dikenali! Harap hubungi Admin untuk registrasi.");
-        resetAbsenUI();
+        alert("Wajah tidak dikenali dalam database!");
+        resetUI();
       } else {
-        // 3. Ambil Lokasi & Kirim Data
+        updateStatus("AMBIL GPS...", "warning");
         navigator.geolocation.getCurrentPosition(async pos => {
           const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
+          updateStatus("MENGIRIM...", "info");
           
           const res = await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({ 
-              action: "attendance", 
-              name: bestMatch.label, 
-              type: tipe, 
-              location: loc 
-            })
+            body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc })
           });
-          
           const result = await res.json();
-
-          // NOTIFIKASI BERHASIL DENGAN NAMA (Sesuai Permintaan Anda)
-          alert(`✅ BERHASIL ABSEN ${tipe}!\n\nNama: ${bestMatch.label}\nWaktu: ${new Date().toLocaleTimeString()}\n\nData telah tersimpan di sistem.`);
           
-          resetAbsenUI();
-        }, (err) => {
-          alert("Gagal mengambil lokasi GPS. Harap aktifkan GPS HP Anda.");
-          resetAbsenUI();
+          // Notifikasi Berhasil dengan Nama Karyawan
+          alert(`✅ BERHASIL ABSEN ${tipe}!\nNama: ${bestMatch.label}\n\n${result.message}`);
+          resetUI();
+        }, () => {
+          alert("Gagal ambil lokasi. Harap aktifkan GPS!");
+          resetUI();
         });
       }
     } catch (e) {
-      console.error(e);
-      alert("Terjadi kesalahan teknis saat memproses absensi.");
-      resetAbsenUI();
+      alert("Terjadi kesalahan teknis.");
+      resetUI();
     }
   }
 
+  // Fungsi Ambil Riwayat dari GAS
+  async function loadLogs() {
+    const tbody = document.getElementById('logTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Memuat...</td></tr>';
+    try {
+      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getLogs" }) });
+      const logs = await res.json();
+      let html = "";
+      for(let i=1; i < logs.length; i++) {
+        const tipeBadge = logs[i][1] === 'MASUK' ? 'bg-success' : 'bg-danger';
+        html += `<tr>
+          <td>${logs[i][0]}</td>
+          <td><span class="badge ${tipeBadge}">${logs[i][1]}</span></td>
+          <td>${logs[i][3]}</td>
+          <td>${logs[i][5] || '-'}</td>
+          <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank" class="btn btn-sm btn-link p-0">Map</a></td>
+        </tr>`;
+      }
+      tbody.innerHTML = html || '<tr><td colspan="5" class="text-center">Kosong</td></tr>';
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Gagal Muat Data</td></tr>';
+    }
+  }
+
+  // Fungsi Registrasi Karyawan
   async function register() {
     const nama = document.getElementById('regNama').value;
     const nik = document.getElementById('regNIK').value;
-    if(!nama || !nik) return alert("Isi data!");
-    btnReg.disabled = true; updateStatus("MEREKAM...", "warning");
+    if(!nama || !nik) return alert("Lengkapi data!");
+    
+    btnReg.disabled = true;
+    updateStatus("MEREKAM...", "warning");
+
     try {
-      //const d = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-       
-    const d = await faceapi.detectSingleFace(
-      video, 
-      new faceapi.TinyFaceDetectorOptions() // Tambahkan opsi ini agar sangat cepat
-    ).withFaceLandmarks().withFaceDescriptor();
-      
-      if(d) {
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(d.descriptor) }) });
-        alert("Sukses!"); location.reload();
-      } else { alert("Gagal!"); btnReg.disabled = false; }
-    } catch (e) { alert("Error!"); btnReg.disabled = false; }
+      const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+      if(detection) {
+        await fetch(GAS_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(detection.descriptor) })
+        });
+        alert("✅ Registrasi Sukses!\nHalaman akan dimuat ulang.");
+        location.reload();
+      } else {
+        alert("Wajah gagal terekam. Ulangi!");
+        btnReg.disabled = false;
+        updateStatus("SISTEM SIAP", "success");
+      }
+    } catch (e) {
+      alert("Gagal koneksi ke server.");
+      btnReg.disabled = false;
+    }
   }
 
-  function resetUI() { btnMasuk.disabled = false; btnPulang.disabled = false; updateStatus("SISTEM SIAP", "success"); }
-  function updateStatus(t, c) { status.innerText = t; status.className = `badge-status badge bg-${c} text-white`; }
+  function resetUI() {
+    btnMasuk.disabled = false;
+    btnPulang.disabled = false;
+    updateStatus("SISTEM SIAP", "success");
+  }
+
+  function updateStatus(text, type) {
+    status.innerText = text;
+    status.className = `badge-status badge bg-${type} text-white`;
+  }
+
   window.onload = init;
 </script>
 </body>
