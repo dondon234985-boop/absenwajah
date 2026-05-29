@@ -170,24 +170,59 @@
     } catch (err) { updateStatus("ERROR AI", "danger"); }
   }
 
-  async function processAbsence(tipe) {
-    btnMasuk.disabled = true; btnPulang.disabled = true;
-    updateStatus("MENGENALI...", "warning");
+ async function processAbsence(tipe) {
+    // Kunci tombol agar tidak double klik
+    btnMasuk.disabled = true;
+    btnPulang.disabled = true;
+    updateStatus(`SEDANG PROSES ${tipe}...`, "warning");
+
     try {
+      // 1. Deteksi Wajah
       const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      if (!detection) { alert("Wajah tidak terlihat!"); resetUI(); return; }
+      if (!detection) {
+        alert("Wajah tidak terdeteksi! Pastikan wajah terlihat jelas di depan kamera.");
+        resetAbsenUI();
+        return;
+      }
+
+      // 2. Pencocokan Wajah
       const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-      if (bestMatch.label === 'unknown') { alert("Tidak dikenal!"); resetUI(); } 
-      else {
+      
+      if (bestMatch.label === 'unknown') {
+        alert("Wajah tidak dikenali! Harap hubungi Admin untuk registrasi.");
+        resetAbsenUI();
+      } else {
+        // 3. Ambil Lokasi & Kirim Data
         navigator.geolocation.getCurrentPosition(async pos => {
           const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
-          const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc }) });
-          const r = await res.json();
-          alert(r.message); resetUI();
-        }, () => { alert("GPS Mati!"); resetUI(); });
+          
+          const res = await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ 
+              action: "attendance", 
+              name: bestMatch.label, 
+              type: tipe, 
+              location: loc 
+            })
+          });
+          
+          const result = await res.json();
+
+          // NOTIFIKASI BERHASIL DENGAN NAMA (Sesuai Permintaan Anda)
+          alert(`✅ BERHASIL ABSEN ${tipe}!\n\nNama: ${bestMatch.label}\nWaktu: ${new Date().toLocaleTimeString()}\n\nData telah tersimpan di sistem.`);
+          
+          resetAbsenUI();
+        }, (err) => {
+          alert("Gagal mengambil lokasi GPS. Harap aktifkan GPS HP Anda.");
+          resetAbsenUI();
+        });
       }
-    } catch (e) { alert("Error!"); resetUI(); }
+    } catch (e) {
+      console.error(e);
+      alert("Terjadi kesalahan teknis saat memproses absensi.");
+      resetAbsenUI();
+    }
   }
 
   async function register() {
