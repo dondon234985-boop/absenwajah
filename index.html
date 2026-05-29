@@ -134,10 +134,11 @@
         const tipeBadge = logs[i][1] === 'MASUK' ? 'bg-success' : 'bg-danger';
         const durasi = logs[i][5] !== "" ? logs[i][5] + ' m' : '-';
         
+       // ... di dalam loop for fungsi loadLogs() ...
         html += `<tr>
           <td class="fw-bold">${logs[i][0]}</td>
           <td><span class="badge ${tipeBadge}">${logs[i][1]}</span></td>
-          <td>${logs[i][3]}</td>
+          <td>${logs[i][3]}</td> <!-- Ini akan otomatis menampilkan DD-MM-YYYY HH:mm:ss -->
           <td>${durasi}</td>
           <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank" class="btn btn-sm btn-link p-0">Map</a></td>
         </tr>`;
