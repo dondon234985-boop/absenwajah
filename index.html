@@ -3,86 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Absensi Digital - Multi Page</title>
+  <title>Sistem Absensi Digital - Full Version</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <style>
     body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
-    .main-container { max-width: 500px; margin: auto; padding: 20px; }
+    .main-container { max-width: 600px; margin: auto; padding: 15px; }
     #video-container { position: relative; width: 100%; border-radius: 20px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); line-height: 0; }
     video { width: 100%; height: auto; display: block; }
-    .badge-status { font-size: 0.9rem; padding: 8px 15px; border-radius: 50px; }
-    .btn-custom { padding: 15px; font-weight: bold; border-radius: 12px; transition: 0.3s; }
+    .badge-status { font-size: 0.8rem; padding: 6px 12px; border-radius: 50px; }
+    .btn-custom { padding: 12px; font-weight: bold; border-radius: 12px; }
     
-    /* Navigasi Bawah atau Atas */
-    .nav-pills .nav-link { border-radius: 10px; font-weight: bold; padding: 10px; color: #666; }
-    .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
+    .nav-pills .nav-link { border-radius: 10px; font-weight: bold; font-size: 0.85rem; color: #666; background: #fff; margin: 0 2px; border: 1px solid #ddd; }
+    .nav-pills .nav-link.active { background-color: #0d6efd; color: white; border-color: #0d6efd; }
     
     .page-section { display: none; }
     .active-page { display: block; }
+    .table-responsive { font-size: 0.8rem; border-radius: 10px; }
   </style>
 </head>
 <body>
 
 <div class="main-container">
   <!-- Navigasi Menu -->
-  <ul class="nav nav-pills nav-justified mb-4 bg-white p-2 shadow-sm rounded-4" id="menu">
-    <li class="nav-item">
-      <a class="nav-link active" href="#" onclick="showPage('absen-page', this)">Menu Absen</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#" onclick="showPage('daftar-page', this)">Menu Daftar</a>
-    </li>
+  <ul class="nav nav-pills nav-justified mb-3 p-1" id="menu">
+    <li class="nav-item"><a class="nav-link active" href="#" onclick="showPage('absen-page', this)">Absen</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('riwayat-page', this)">Riwayat</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showPage('daftar-page', this)">Daftar</a></li>
   </ul>
 
-  <!-- Area Kamera (Tetap terlihat di kedua halaman) -->
-  <div id="video-container" class="mb-3">
-    <video id="video" autoplay muted playsinline></video>
+  <!-- Area Kamera -->
+  <div id="cam-section">
+    <div id="video-container" class="mb-3">
+      <video id="video" autoplay muted playsinline></video>
+    </div>
+    <div class="text-center mb-4">
+      <span id="status" class="badge-status badge bg-secondary text-white">Memuat AI...</span>
+    </div>
   </div>
 
-  <div class="text-center mb-4">
-    <span id="status" class="badge-status badge bg-secondary text-white">Memuat AI...</span>
-  </div>
-
-  <!-- HALAMAN 1: FORM ABSEN -->
+  <!-- HALAMAN 1: ABSEN -->
   <div id="absen-page" class="page-section active-page">
-    <div class="text-center mb-3">
-      <h5 class="fw-bold">Halaman Presensi</h5>
-      <p class="text-muted small">Klik tombol sesuai kebutuhan Anda</p>
-    </div>
     <div class="row g-2">
-      <div class="col-6">
-        <button id="btnMasuk" class="btn btn-success btn-custom w-100 shadow-sm" onclick="processAbsence('MASUK')" disabled>
-          ABSEN MASUK
-        </button>
-      </div>
-      <div class="col-6">
-        <button id="btnPulang" class="btn btn-danger btn-custom w-100 shadow-sm" onclick="processAbsence('PULANG')" disabled>
-          ABSEN PULANG
-        </button>
-      </div>
+      <div class="col-6"><button id="btnMasuk" class="btn btn-success btn-custom w-100" onclick="processAbsence('MASUK')" disabled>MASUK</button></div>
+      <div class="col-6"><button id="btnPulang" class="btn btn-danger btn-custom w-100" onclick="processAbsence('PULANG')" disabled>PULANG</button></div>
     </div>
   </div>
 
-  <!-- HALAMAN 2: FORM DAFTAR -->
+  <!-- HALAMAN 2: RIWAYAT (TABEL) -->
+  <div id="riwayat-page" class="page-section">
+    <div class="card border-0 shadow-sm p-2 rounded-4">
+      <h6 class="fw-bold mb-2 text-center">20 Data Terakhir</h6>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped">
+          <thead class="table-dark">
+            <tr><th>Nama</th><th>Tipe</th><th>Jam</th><th>Durasi</th><th>Map</th></tr>
+          </thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="5" class="text-center">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-sm btn-outline-primary mt-2" onclick="loadLogs()">Segarkan Data</button>
+    </div>
+  </div>
+
+  <!-- HALAMAN 3: DAFTAR -->
   <div id="daftar-page" class="page-section">
     <div class="card border-0 shadow-sm p-4 rounded-4">
-      <h5 class="fw-bold mb-3 text-center">Registrasi Wajah</h5>
-      <div class="mb-2">
-        <label class="small fw-bold">Nama Karyawan</label>
-        <input type="text" id="regNama" class="form-control" placeholder="Nama Lengkap">
-      </div>
-      <div class="mb-4">
-        <label class="small fw-bold">Nomor Induk / NIK</label>
-        <input type="text" id="regNIK" class="form-control" placeholder="Contoh: 2023001">
-      </div>
-      <button id="btnReg" class="btn btn-primary btn-custom w-100 shadow-sm" onclick="register()">
-        DAFTARKAN WAJAH SEKARANG
-      </button>
+      <h6 class="fw-bold mb-3">Registrasi Karyawan</h6>
+      <input type="text" id="regNama" class="form-control mb-2" placeholder="Nama Lengkap">
+      <input type="text" id="regNIK" class="form-control mb-3" placeholder="NIK">
+      <button id="btnReg" class="btn btn-primary btn-custom w-100" onclick="register()">DAFTAR WAJAH</button>
     </div>
   </div>
 
-  <p class="text-center mt-5 text-muted" style="font-size: 10px;">GAS-WebMaster System v2.0</p>
+  <p class="text-center mt-5 text-muted" style="font-size: 10px;">GAS-WebMaster System v3.0</p>
 </div>
 
 <script>
@@ -95,19 +91,47 @@
   const btnPulang = document.getElementById('btnPulang');
   const btnReg = document.getElementById('btnReg');
 
-  // Fungsi Pindah Halaman
+  // Navigasi Halaman
   function showPage(pageId, element) {
-    // Sembunyikan semua halaman
-    document.querySelectorAll('.page-section').forEach(page => page.classList.remove('active-page'));
-    // Tampilkan halaman terpilih
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active-page'));
     document.getElementById(pageId).classList.add('active-page');
-    
-    // Update menu aktif
-    document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
     element.classList.add('active');
+
+    // Jika buka Riwayat, sembunyikan kamera agar tabel luas
+    if(pageId === 'riwayat-page') {
+      document.getElementById('cam-section').style.display = 'none';
+      loadLogs();
+    } else {
+      document.getElementById('cam-section').style.display = 'block';
+    }
   }
 
-  // Inisialisasi AI & Kamera
+  // Ambil Data Log dari Sheets
+  async function loadLogs() {
+    const tbody = document.getElementById('logTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Memuat...</td></tr>';
+    try {
+      const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getLogs" }) });
+      const logs = await res.json();
+      let html = "";
+      // Mulai dari index 1 (lewatkan header)
+      for(let i=1; i < logs.length; i++) {
+        html += `<tr>
+          <td>${logs[i][0]}</td>
+          <td><span class="badge ${logs[i][1]=='MASUK'?'bg-success':'bg-danger'}">${logs[i][1]}</span></td>
+          <td>${logs[i][3]}</td>
+          <td>${logs[i][5] || '-'} m</td>
+          <td><a href="https://www.google.com/maps?q=${logs[i][4]}" target="_blank">Lihat</a></td>
+        </tr>`;
+      }
+      tbody.innerHTML = html || '<tr><td colspan="5" class="text-center">Belum ada data</td></tr>';
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center">Gagal memuat data</td></tr>';
+    }
+  }
+
+  // --- Fungsi AI & Kamera (Tetap Sama) ---
   async function init() {
     const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
     try {
@@ -117,103 +141,52 @@
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
       ]);
-
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
       video.srcObject = stream;
-
       const response = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "getFaces" }) });
       const faces = await response.json();
       labeledDescriptors = faces.map(d => new faceapi.LabeledFaceDescriptors(d.name, [new Float32Array(d.descriptor)]));
-      
       updateStatus("SISTEM SIAP", "success");
-      btnMasuk.disabled = false;
-      btnPulang.disabled = false;
-    } catch (err) {
-      updateStatus("GAGAL MEMUAT SISTEM", "danger");
-    }
+      btnMasuk.disabled = false; btnPulang.disabled = false;
+    } catch (err) { updateStatus("ERROR AI", "danger"); }
   }
 
-  // Fungsi Absensi
   async function processAbsence(tipe) {
-    btnMasuk.disabled = true;
-    btnPulang.disabled = true;
-    updateStatus(`SEDANG PROSES ${tipe}...`, "warning");
-
+    btnMasuk.disabled = true; btnPulang.disabled = true;
+    updateStatus("MENGENALI...", "warning");
     try {
       const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      if (!detection) {
-        alert("Wajah tidak terdeteksi! Pastikan wajah terlihat jelas.");
-        resetAbsenUI();
-        return;
-      }
-
+      if (!detection) { alert("Wajah tidak terlihat!"); resetUI(); return; }
       const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-      
-      if (bestMatch.label === 'unknown') {
-        alert("Wajah tidak dikenali dalam database!");
-        resetAbsenUI();
-      } else {
+      if (bestMatch.label === 'unknown') { alert("Tidak dikenal!"); resetUI(); } 
+      else {
         navigator.geolocation.getCurrentPosition(async pos => {
           const loc = `${pos.coords.latitude},${pos.coords.longitude}`;
-          const res = await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc })
-          });
-          const result = await res.json();
-          alert(`SISTEM: ${result.message}\nNama: ${bestMatch.label}`);
-          resetAbsenUI();
-        }, (err) => {
-          alert("Gagal ambil lokasi GPS. Harap aktifkan GPS HP Anda.");
-          resetAbsenUI();
-        });
+          const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "attendance", name: bestMatch.label, type: tipe, location: loc }) });
+          const r = await res.json();
+          alert(r.message); resetUI();
+        }, () => { alert("GPS Mati!"); resetUI(); });
       }
-    } catch (e) {
-      alert("Terjadi kesalahan teknis.");
-      resetAbsenUI();
-    }
+    } catch (e) { alert("Error!"); resetUI(); }
   }
 
-  // Fungsi Registrasi
   async function register() {
     const nama = document.getElementById('regNama').value;
     const nik = document.getElementById('regNIK').value;
-    if(!nama || !nik) return alert("Lengkapi data Nama dan NIK!");
-    
-    btnReg.disabled = true;
-    updateStatus("MEREKAM WAJAH...", "warning");
-
+    if(!nama || !nik) return alert("Isi data!");
+    btnReg.disabled = true; updateStatus("MEREKAM...", "warning");
     try {
-      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      if(detection) {
-        await fetch(GAS_URL, {
-          method: "POST",
-          body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(detection.descriptor) })
-        });
-        alert("Registrasi Berhasil! Halaman akan dimuat ulang.");
-        location.reload();
-      } else {
-        alert("Gagal mendeteksi wajah.");
-        btnReg.disabled = false;
-        updateStatus("SISTEM SIAP", "success");
-      }
-    } catch (e) {
-      alert("Gagal menyimpan data.");
-      btnReg.disabled = false;
-    }
+      const d = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      if(d) {
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(d.descriptor) }) });
+        alert("Sukses!"); location.reload();
+      } else { alert("Gagal!"); btnReg.disabled = false; }
+    } catch (e) { alert("Error!"); btnReg.disabled = false; }
   }
 
-  function resetAbsenUI() {
-    btnMasuk.disabled = false;
-    btnPulang.disabled = false;
-    updateStatus("SISTEM SIAP", "success");
-  }
-
-  function updateStatus(text, type) {
-    status.innerText = text;
-    status.className = `badge-status badge bg-${type} text-white`;
-  }
-
+  function resetUI() { btnMasuk.disabled = false; btnPulang.disabled = false; updateStatus("SISTEM SIAP", "success"); }
+  function updateStatus(t, c) { status.innerText = t; status.className = `badge-status badge bg-${c} text-white`; }
   window.onload = init;
 </script>
 </body>
