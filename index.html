@@ -178,7 +178,14 @@
 
     try {
       // 1. Deteksi Wajah
-      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      //const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      
+      const detection = await faceapi.detectSingleFace(
+        video, 
+        new faceapi.TinyFaceDetectorOptions() // Tambahkan opsi ini agar sangat cepat
+      ).withFaceLandmarks().withFaceDescriptor();
+
+      
       if (!detection) {
         alert("Wajah tidak terdeteksi! Pastikan wajah terlihat jelas di depan kamera.");
         resetAbsenUI();
@@ -231,7 +238,13 @@
     if(!nama || !nik) return alert("Isi data!");
     btnReg.disabled = true; updateStatus("MEREKAM...", "warning");
     try {
-      const d = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      //const d = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+       
+    const d = await faceapi.detectSingleFace(
+      video, 
+      new faceapi.TinyFaceDetectorOptions() // Tambahkan opsi ini agar sangat cepat
+    ).withFaceLandmarks().withFaceDescriptor();
+      
       if(d) {
         await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "register", name: nama, nik: nik, descriptor: Array.from(d.descriptor) }) });
         alert("Sukses!"); location.reload();
